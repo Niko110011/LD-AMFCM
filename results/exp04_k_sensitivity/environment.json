@@ -1,0 +1,32 @@
+{
+  "cpu_count": 16,
+  "experiment": {
+    "init_seed": 42,
+    "k_values": [
+      5,
+      8,
+      12,
+      16,
+      20,
+      30
+    ],
+    "kmeans_n_init": 1,
+    "protocol": "frozen input; per-benchmark data seed 42; single run"
+  },
+  "machine": "AMD64",
+  "packages": {
+    "matplotlib": "2.2.3",
+    "numpy": "1.15.1",
+    "pandas": "0.23.4",
+    "scipy": "1.1.0",
+    "seaborn": "0.9.0",
+    "sklearn": "0.19.2"
+  },
+  "platform": "Windows-10-10.0.22621-SP0",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "python": "3.7.0 (default, Jun 28 2018, 08:04:48) [MSC v.1912 64 bit (AMD64)]",
+  "python_version": "3.7.0",
+  "release": "10",
+  "system": "Windows",
+  "timestamp": "2026-10-12 16:36:33"
+}

@@ -1,0 +1,26 @@
+Dataset,Method,ARI,DBI,Noise_Membership
+Anisotropic + Noise,DW-FCM,0.5926 +/- 0.0042,0.6980 +/- 0.0036,0.6366 +/- 0.0176
+Anisotropic + Noise,FCM (Baseline),0.5222 +/- 0.0077,0.7114 +/- 0.0035,0.6400 +/- 0.0189
+Anisotropic + Noise,LD-AMFCM (Exp),0.5843 +/- 0.0022,0.6964 +/- 0.0036,0.5332 +/- 0.0206
+Anisotropic + Noise,LD-AMFCM (Rec),0.5953 +/- 0.0032,0.6984 +/- 0.0037,0.5232 +/- 0.0204
+Anisotropic + Noise,LD-AMFCM (Sig),0.6108 +/- 0.0108,0.7016 +/- 0.0054,0.4837 +/- 0.0160
+Blobs + Uniform Noise,DW-FCM,0.9361 +/- 0.0030,0.4605 +/- 0.0007,0.6729 +/- 0.0162
+Blobs + Uniform Noise,FCM (Baseline),0.9410 +/- 0.0022,0.4604 +/- 0.0007,0.6869 +/- 0.0162
+Blobs + Uniform Noise,LD-AMFCM (Exp),0.9417 +/- 0.0000,0.4606 +/- 0.0007,0.5274 +/- 0.0147
+Blobs + Uniform Noise,LD-AMFCM (Rec),0.9403 +/- 0.0030,0.4606 +/- 0.0007,0.5286 +/- 0.0144
+Blobs + Uniform Noise,LD-AMFCM (Sig),0.9417 +/- 0.0000,0.4603 +/- 0.0007,0.4973 +/- 0.0127
+Breast Cancer + Outliers,DW-FCM,0.6414 +/- 0.0134,1.3523 +/- 0.0077,0.5612 +/- 0.0028
+Breast Cancer + Outliers,FCM (Baseline),0.6756 +/- 0.0064,1.2546 +/- 0.0032,0.5994 +/- 0.0053
+Breast Cancer + Outliers,LD-AMFCM (Exp),0.7377 +/- 0.0073,1.2919 +/- 0.0047,0.5301 +/- 0.0017
+Breast Cancer + Outliers,LD-AMFCM (Rec),0.7325 +/- 0.0025,1.3055 +/- 0.0046,0.5285 +/- 0.0015
+Breast Cancer + Outliers,LD-AMFCM (Sig),0.6108 +/- 0.0087,1.3639 +/- 0.0056,0.5231 +/- 0.0011
+Iris + Outliers,DW-FCM,0.8169 +/- 0.0358,0.7869 +/- 0.0196,0.4455 +/- 0.0156
+Iris + Outliers,FCM (Baseline),0.5647 +/- 0.0059,0.4818 +/- 0.0118,0.6419 +/- 0.0292
+Iris + Outliers,LD-AMFCM (Exp),0.8157 +/- 0.0420,0.7850 +/- 0.0171,0.3789 +/- 0.0088
+Iris + Outliers,LD-AMFCM (Rec),0.8252 +/- 0.0380,0.7877 +/- 0.0186,0.3801 +/- 0.0088
+Iris + Outliers,LD-AMFCM (Sig),0.8453 +/- 0.0427,0.7914 +/- 0.0188,0.3774 +/- 0.0067
+Moons + Gaussian Noise,DW-FCM,0.4350 +/- 0.0275,0.8110 +/- 0.0014,0.7160 +/- 0.0154
+Moons + Gaussian Noise,FCM (Baseline),0.4192 +/- 0.0260,0.8113 +/- 0.0014,0.7198 +/- 0.0163
+Moons + Gaussian Noise,LD-AMFCM (Exp),0.4317 +/- 0.0335,0.8106 +/- 0.0017,0.6641 +/- 0.0207
+Moons + Gaussian Noise,LD-AMFCM (Rec),0.4359 +/- 0.0281,0.8109 +/- 0.0015,0.6565 +/- 0.0182
+Moons + Gaussian Noise,LD-AMFCM (Sig),0.4511 +/- 0.0289,0.8114 +/- 0.0020,0.6310 +/- 0.0169

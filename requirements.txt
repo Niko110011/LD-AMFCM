@@ -1,0 +1,10 @@
+# Versions of the environment in which the reported results were produced.
+# Pinning them matters: the comparison table depends on scikit-learn's
+# k-means++ initialisation, which is not guaranteed to be identical across
+# releases.
+numpy==1.15.1
+scipy==1.1.0
+scikit-learn==0.19.2
+pandas==0.23.4
+matplotlib==2.2.3
+seaborn==0.9.0

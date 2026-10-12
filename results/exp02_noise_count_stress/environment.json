@@ -1,0 +1,35 @@
+{
+  "cpu_count": 16,
+  "experiment": {
+    "adaptive_mapping": "Sig",
+    "data_seed": "100 + s",
+    "init_seed": "s",
+    "n_runs": 10,
+    "noise_counts": [
+      40,
+      60,
+      80,
+      100,
+      120,
+      140,
+      160
+    ],
+    "protocol": "regenerated input"
+  },
+  "machine": "AMD64",
+  "packages": {
+    "matplotlib": "2.2.3",
+    "numpy": "1.15.1",
+    "pandas": "0.23.4",
+    "scipy": "1.1.0",
+    "seaborn": "0.9.0",
+    "sklearn": "0.19.2"
+  },
+  "platform": "Windows-10-10.0.22621-SP0",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "python": "3.7.0 (default, Jun 28 2018, 08:04:48) [MSC v.1912 64 bit (AMD64)]",
+  "python_version": "3.7.0",
+  "release": "10",
+  "system": "Windows",
+  "timestamp": "2026-10-12 16:33:07"
+}

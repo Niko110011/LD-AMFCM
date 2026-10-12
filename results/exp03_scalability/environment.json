@@ -1,0 +1,50 @@
+{
+  "cpu_count": 16,
+  "experiment": {
+    "caveat": "sequential kNN search",
+    "density_algorithm": "brute",
+    "density_n_jobs": 1,
+    "fixed_n": 2000,
+    "fixed_p": 10,
+    "init_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "n_values": [
+      500,
+      1000,
+      2000,
+      5000,
+      10000
+    ],
+    "p_values": [
+      10,
+      20,
+      50,
+      100,
+      200,
+      500
+    ],
+    "protocol": "frozen synthetic data, generator seed 42",
+    "timing": "time.perf_counter, wall-clock seconds"
+  },
+  "machine": "AMD64",
+  "packages": {
+    "matplotlib": "2.2.3",
+    "numpy": "1.15.1",
+    "pandas": "0.23.4",
+    "scipy": "1.1.0",
+    "seaborn": "0.9.0",
+    "sklearn": "0.19.2"
+  },
+  "platform": "Windows-10-10.0.22621-SP0",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "python": "3.7.0 (default, Jun 28 2018, 08:04:48) [MSC v.1912 64 bit (AMD64)]",
+  "python_version": "3.7.0",
+  "release": "10",
+  "system": "Windows",
+  "timestamp": "2026-10-12 16:41:27"
+}
