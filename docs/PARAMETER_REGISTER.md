@@ -60,9 +60,46 @@ The authoritative definition is `ldamfcm/config.py`.
 | Prototype update | v_k = Σ_i w_i u_ik^(m_i) x_i / Σ_i w_i u_ik^(m_i), denominator guarded by 1e-12 |
 | Stopping rule | ‖V_new − V‖_F < 1e-4 in the main runs; max_k ‖v_k^new − v_k‖ < 1e-4 in the scalability runs; ‖U_new − U‖_F < 1e-5 in the sweep variant |
 | Iteration cap | 100 (LD-AMFCM and every baseline that reports one) |
-| Initialisation, headline runs | k-means++ in the input space, `n_init=1`, `random_state = init seed`; identical initial prototypes for FCM, DW-FCM, the three LD-AMFCM mappings and MC-FCM within a matched run |
-| Initialisation, comparison and ablation | k-means++ with `n_init=10`, `random_state = init seed` |
+| Initialisation | k-means++ in the input space, `random_state = init seed`; identical initial prototypes for FCM, DW-FCM, the three LD-AMFCM mappings and MC-FCM within a matched run. The number of k-means++ restarts differs by experiment family — see the table below |
 | Hard labels | ŷ_i = argmax_k u_ik |
+
+### Solver settings that differ by experiment family
+
+Two settings are not global. Both are registered per experiment in
+`config.py`.
+
+| Experiment | k-means++ restarts | Membership update |
+|---|---|---|
+| `exp01` mapping sensitivity | 1 | negative-power |
+| `exp02` noise-count stress | 1 | negative-power |
+| `exp03` scalability | 1 | negative-power |
+| `exp04` neighbourhood size k | 1 | negative-power |
+| `exp05` fuzzifier bounds (variant) | not used | negative-power |
+| `exp05` fuzzifier bounds (`--headline-solver`) | 1 | negative-power |
+| `exp06` baseline comparison | 10 | ratio |
+| `exp07` density-reliability stress | 10 | ratio |
+| `exp08` ablation | 10 | ratio |
+| `exp09` contamination ratio | 10 | ratio |
+| `exp10` runtime | 10 | ratio |
+| `exp11` paired statistics | 10 | ratio |
+
+Only the membership column moves the published sweep values. Measured on the
+mapping sweep, one and ten restarts give identical ARI at every grid point
+tested, so the restarts column restores the recorded protocol rather than
+changing any number. The GMM, k-means and adaptive-FCM-GE baselines use ten
+restarts in every experiment.
+
+**Membership update forms.** Both are algebraically equivalent, but they
+differ wherever the fuzzifier is small, because the negative-power form's
+additive 1e-12 guard stops being a rounding protector and becomes the dominant
+term of the denominator, so affected rows no longer sum to one:
+
+* *ratio* — `u_ij = 1 / sum_k (d_ij / d_ik) ** (1 / (m_i - 1))`; every row is
+  normalised by construction.
+* *negative-power* — `inv = d ** (-1 / (m_i - 1)); u = inv / (sum(inv) + 1e-12)`;
+  the form the sweep family was produced with.
+
+See `KNOWN_VARIATIONS.md` §14, which also gives the affected values.
 
 ---
 

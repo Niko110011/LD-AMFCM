@@ -99,7 +99,12 @@ def run(quick=False):
                     U = fcm.fcm_weighted(
                         X, n_clusters, m_i, w,
                         random_state=init_seed,
-                        n_init=config.KMEANS_N_INIT,
+                        n_init=config.n_init_for("exp01_mapping_sensitivity"),
+                        # The published alpha/beta/gamma curves were produced
+                        # with the negative-power membership form, whose 1e-12
+                        # guard dominates for crisp samples.  See the solver
+                        # docstring and KNOWN_VARIATIONS.md.
+                        membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
                     )
                     aris.append(metrics.clean_ari(y_true, U.argmax(axis=1)))
 

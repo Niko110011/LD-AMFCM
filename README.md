@@ -12,6 +12,7 @@ statistical protocol, in a form that regenerates the reported numbers.
 pip install -r requirements.txt
 
 python smoke_test.py                     # verify against the published values, ~1 min
+python verify_published_sweeps.py        # check the sweep CSVs, ~1 s
 python run_all.py --quick                # every experiment on reduced grids, ~1 min
 python run_all.py                        # the full suite
 ```
@@ -145,6 +146,19 @@ instead, which is the form to report if the sweep is ever re-run.
    3.95 s against 0.005 s at n = 500. The default reproduces the published
    columns; `--n-jobs 1` produces timings that reflect the algorithm. See
    `docs/KNOWN_VARIATIONS.md` §13 before quoting the figure.
+
+4. **The sweep family uses a numerically fragile membership update.** Two
+   algebraically equivalent forms appear in the notebook, and they disagree
+   wherever the fuzzifier is small: the negative-power form's additive 1e-12
+   guard becomes the dominant term of its denominator, so affected rows stop
+   summing to one. The mapping and `k` sweeps were produced with it. Both
+   forms are implemented and registered per experiment. See
+   `docs/KNOWN_VARIATIONS.md` §14.
+
+The number of k-means++ restarts also differs by family — 1 restart for the
+sweeps, 10 for the comparison and ablation — and is registered per experiment
+in `config.py`. See the solver-settings table in
+`docs/PARAMETER_REGISTER.md`.
 
 Details and the full list of deviations: [`docs/KNOWN_VARIATIONS.md`](docs/KNOWN_VARIATIONS.md).
 

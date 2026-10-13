@@ -42,15 +42,27 @@ PROTOTYPE_MAXSHIFT = "prototype_maxshift"
 
 CONVERGENCE_CRITERIA = (PROTOTYPE_FROBENIUS, PROTOTYPE_MAXSHIFT)
 
+MEMBERSHIP_RATIO = "ratio"
+MEMBERSHIP_NEGATIVE_POWER = "negative_power"
+
+MEMBERSHIP_FORMS = (MEMBERSHIP_RATIO, MEMBERSHIP_NEGATIVE_POWER)
+
 
 def _membership_update_from_squared_distances(dist_sq, m_i, n_samples, n_clusters):
-    """Standard fuzzy membership for a per-sample fuzzifier.
+    """Standard fuzzy membership for a per-sample fuzzifier (ratio form).
 
     ``u_ij = 1 / sum_k (d_ij / d_ik) ** (1 / (m_i - 1))``
 
     where ``d`` are the squared distances including the additive stabiliser.
-    This is algebraically identical to the ratio of the negative powers used
-    by the earlier cells of the notebook, and is numerically better behaved.
+    This is the form used by the later notebook cells (the baseline
+    comparison and everything downstream of it).  It is algebraically
+    identical to the negative-power form used by the earlier cells, but does
+    not suffer its underflow artefact: for a crisp sample (m_i close to 1.05)
+    the negative powers can fall far below 1e-12, where the earlier form's
+    additive guard dominates and the membership row stops summing to one.
+    The pairwise ratio keeps every row normalised.  The two forms agree
+    everywhere except that regime, which is why the mapping and k sweeps must
+    use :data:`MEMBERSHIP_NEGATIVE_POWER` to reproduce their published curves.
 
     The pairwise distance ratio is an outer division: for row ``i`` the entry
     ``[j, k]`` is ``d_ij / d_ik``, and the membership of ``j`` sums over ``k``.
@@ -62,6 +74,26 @@ def _membership_update_from_squared_distances(dist_sq, m_i, n_samples, n_cluster
     ratios = dist_sq[:, :, None] / dist_sq[:, None, :]
 
     return 1.0 / np.sum(ratios ** exponent[:, None, None], axis=2)
+
+
+def _membership_update_negative_power(dist_sq, m_i, n_samples, n_clusters):
+    """Membership update exactly as written in the early notebook cells.
+
+    ``inv = d ** (-1 / (m_i - 1));  u = inv / (sum(inv) + 1e-12)``
+
+    The additive 1e-12 guard is part of the reproduced arithmetic, not just a
+    division-by-zero protector: whenever the powers fall below ~1e-12 the
+    guard dominates the sum and the membership row no longer normalises to
+    one, so those samples contribute almost nothing to the prototype update.
+    This is the behaviour the published mapping and k sweeps were produced
+    with, and it is kept so those curves can be reproduced.  Experiments that
+    were produced with the ratio form use :data:`MEMBERSHIP_RATIO` instead.
+    """
+    u = np.zeros((n_samples, n_clusters), dtype=float)
+    for i in range(n_samples):
+        inv = dist_sq[i] ** (-1.0 / (m_i[i] - 1.0))
+        u[i] = inv / (np.sum(inv) + 1e-12)
+    return u
 
 
 def _prototype_update(X, U, m_i, w_i, n_clusters):
@@ -85,6 +117,7 @@ def fcm_weighted(
     max_iter=MAX_ITER,
     tol=TOL,
     eta=ETA,
+    membership_form=MEMBERSHIP_RATIO,
     convergence=PROTOTYPE_FROBENIUS,
     return_diagnostics=False,
 ):
@@ -107,11 +140,15 @@ def fcm_weighted(
     n_init : int
         Number of k-means++ restarts inside :class:`sklearn.cluster.KMeans`.
         The headline runs use 1; the comparison and ablation blocks use 10.
-    max_iter, tol, eta, convergence :
-        Iteration cap, stopping tolerance, distance stabiliser and the
-        stopping rule.  ``prototype_frobenius`` compares the Frobenius norm of
-        the prototype change against ``tol``; ``prototype_maxshift`` compares
-        the largest per-cluster prototype shift.
+    max_iter, tol, eta, membership_form, convergence :
+        Iteration cap, stopping tolerance, distance stabiliser, the form of
+        the membership update and the stopping rule.  ``membership_form`` is
+        one of :data:`MEMBERSHIP_FORMS`: the default ratio form is the one the
+        published baseline comparison was produced with; the negative-power
+        form reproduces the mapping and k sweeps, whose published curves were
+        produced with it.  ``prototype_frobenius`` compares the Frobenius norm
+        of the prototype change against ``tol``; ``prototype_maxshift``
+        compares the largest per-cluster prototype shift.
     return_diagnostics : bool
         Also return ``(V, n_iter, init_time, opt_time)``.
 
@@ -129,6 +166,13 @@ def fcm_weighted(
     if convergence not in CONVERGENCE_CRITERIA:
         raise ValueError(
             "Unknown convergence criterion {!r}".format(convergence)
+        )
+
+    if membership_form not in MEMBERSHIP_FORMS:
+        raise ValueError(
+            "Unknown membership form {!r}; expected one of {}".format(
+                membership_form, MEMBERSHIP_FORMS
+            )
         )
 
     n_samples = X.shape[0]
@@ -154,9 +198,14 @@ def fcm_weighted(
         for j in range(n_clusters):
             dist_sq[:, j] = np.sum((X - V[j]) ** 2, axis=1) + eta
 
-        U = _membership_update_from_squared_distances(
-            dist_sq, m_i, n_samples, n_clusters
-        )
+        if membership_form == MEMBERSHIP_NEGATIVE_POWER:
+            U = _membership_update_negative_power(
+                dist_sq, m_i, n_samples, n_clusters
+            )
+        else:
+            U = _membership_update_from_squared_distances(
+                dist_sq, m_i, n_samples, n_clusters
+            )
 
         V_new = _prototype_update(X, U, m_i, w_i, n_clusters)
 

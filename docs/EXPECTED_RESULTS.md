@@ -84,9 +84,14 @@ against the saved notebook output.
 | Experiment | What was compared | Result |
 |---|---|---|
 | `smoke_test.py` | ARI of six methods on all five benchmarks, frozen input | **30 / 30 values match to four decimals** |
-| `exp02` | ARI mean of three methods at seven contamination levels | **21 / 21 values match to six decimals** |
+| `verify_published_sweeps.py` | `exp01` (90), `exp02` (21) and `exp04` (54) against the notebook's saved output | **165 / 165 values match** |
 | `exp06` | ARI, DBI, noise membership and noise AUC, mean and std, for thirteen methods on five benchmarks | **260 / 260 values match to four decimals** |
 | `exp11` | ARI, DBI and noise membership, mean and std, for five methods on five benchmarks | **75 / 75 values match to four decimals**, including the non-zero spreads |
+
+The sweep family (`exp01`, `exp02`, `exp04`) only reproduces with the
+negative-power membership form and a single k-means++ restart. The comparison
+family (`exp06`, `exp11`) only reproduces with the ratio form and ten
+restarts. Both are registered per experiment; see `KNOWN_VARIATIONS.md` §14.
 
 `exp11` also confirms the global-generator faithful mode: the standard
 deviations only match if each run consumes the random stream in the same

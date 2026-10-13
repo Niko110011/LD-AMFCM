@@ -322,7 +322,77 @@ mapping rather than for LD-AMFCM as a whole.
 
 ---
 
-## 14. Summary
+## 14. Two membership-update forms, and the 1e-12 guard between them
+
+**Affects:** every experiment, but differently.
+
+The notebook contains two algebraically equivalent membership updates, and
+they do **not** produce the same numbers in general:
+
+**Ratio form** (cells 8–15: baseline comparison, ablation, stress, noise
+ratio, runtime, paired study)
+
+```
+u_ij = 1 / sum_k (d_ij / d_ik) ** (1 / (m_i - 1))
+```
+
+Every row sums to exactly one by construction.
+
+**Negative-power form** (cells 0–7: mapping sweep, k sweep, noise-count
+stress, scalability, fuzzifier sweeps)
+
+```
+inv = d ** (-1 / (m_i - 1));   u = inv / (sum(inv) + 1e-12)
+```
+
+The two agree whenever the powers stay above ~1e-12. They diverge for a
+*crisp* sample: as `m_i -> 1.05` the exponent `1/(m_i - 1)` reaches 20, and
+for a sample whose distances are large the negative powers fall far below
+1e-12. At that point the additive guard is no longer a rounding protector but
+the dominant term of the denominator, so the row stops summing to one. On the
+Breast benchmark with `alpha = 6.33`, 157 of 599 rows are affected and their
+row sums fall to ~1e-6, meaning those samples contribute essentially nothing
+to the prototype update.
+
+**Consequence.** The two forms give different clusterings for exactly the
+regimes where the fuzzifier is small, which is where the mapping and `k`
+sweeps spend most of their grid:
+
+| experiment | parameter value | ratio form | negative-power form | notebook |
+|---|---|---|---|---|
+| `exp01` | `alpha = 6.33` | 0.7431 | 0.7676 | 0.7676 |
+| `exp01` | `gamma = 30.00` | 0.6442 | 0.7866 | 0.7866 |
+| `exp04` | Breast, `k = 12`, Exp | 0.7371 | 0.7676 | 0.7676 |
+
+**What was done.** Both forms are implemented,
+`fcm_weighted(..., membership_form=...)`, and each experiment uses the one it
+was originally run with. This is recorded in `config.py` and stated in the
+parameter register. `verify_published_sweeps.py` checks the sweep family
+against the notebook's saved output: 165 of 165 values match.
+
+**This was a real defect in the first release of this package**, where the
+ratio form was used everywhere and the mapping and `k` sweeps therefore did
+not reproduce their published curves. It was found only because `exp01`
+diverged from the notebook after an unrelated change, which prompted a
+value-by-value comparison.
+
+**What this means for the paper.** Two of the three mapping sweeps and the `k`
+sweep were produced with a numerically fragile implementation whose additive
+guard silently deactivates a subset of the samples. This is worth stating in
+the supplement, and worth re-running with the ratio form if the sweeps are
+presented as evidence about the method as configured elsewhere. The
+qualitative shape of the curves is likely to survive; the specific values at
+large `alpha` and large `gamma` will not.
+
+**Related observation.** The negative-power form also converges more slowly in
+some configurations, plausibly because the same guard suppresses part of the
+prototype update. In `exp03` at `p = 20` the exponential mapping needs 58–80
+iterations across the five seeds, against 5–13 at every other dimensionality.
+The ratio form does not show this.
+
+---
+
+## 15. Summary
 
 | # | Item | Status | May change published numbers |
 |---|---|---|---|
@@ -339,3 +409,4 @@ mapping rather than for LD-AMFCM as a whole.
 | 11 | degenerate normalisation constant | unified | no |
 | 12 | AWDFCM re-initialisation source | preserved, both available | no |
 | 13 | scalability timings measure thread start-up | preserved, `--n-jobs 1` available | no (but the figure misleads) |
+| 14 | two membership forms either side of a 1e-12 guard | preserved, both available | no (reproduces them) |

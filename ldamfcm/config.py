@@ -116,6 +116,51 @@ GMM_N_COMPONENTS_IS_C = True
 
 
 # ----------------------------------------------------------------------
+# k-means++ restart count, registered per experiment
+# ----------------------------------------------------------------------
+
+# The number of k-means++ restarts differs by experiment family in the
+# original notebook, so it is registered per experiment rather than globally.
+#
+#   n_init = 1   mapping, k, scalability and noise-count sweeps
+#   n_init = 10  comparison, ablation, stress, noise-ratio, runtime and
+#                paired studies
+#   not used     m_min / m_max sweeps (random-membership variant)
+#
+# Note on what this does and does not affect: measured on the mapping sweep,
+# 1 and 10 restarts give identical ARI at every grid point tested, so this
+# registration restores the recorded protocol rather than changing any
+# published number.  The membership form (see MEMBERSHIP_FORMS in fcm.py) is
+# the setting that actually moves the sweep results.
+N_INIT_BY_EXPERIMENT = {
+    "exp01_mapping_sensitivity": 1,
+    "exp02_noise_count_stress": 1,
+    "exp03_scalability": 1,
+    "exp04_k_sensitivity": 1,
+    # The default path of exp05 is the random-membership variant and takes no
+    # k-means initialisation; the value 1 applies to its --headline-solver
+    # path, which follows the sweep-family convention.
+    "exp05_fuzzifier_sensitivity": 1,
+    "exp06_baseline_comparison": 10,
+    "exp07_density_reliability": 10,
+    "exp08_ablation": 10,
+    "exp09_noise_ratio": 10,
+    "exp10_runtime": 10,
+    "exp11_paired_statistics": 10,
+}
+
+
+def n_init_for(experiment):
+    """Number of k-means++ restarts used by the named experiment."""
+    try:
+        return N_INIT_BY_EXPERIMENT[experiment]
+    except KeyError:
+        raise KeyError(
+            "No n_init registered for experiment {!r}".format(experiment)
+        )
+
+
+# ----------------------------------------------------------------------
 # Seed register
 # ----------------------------------------------------------------------
 

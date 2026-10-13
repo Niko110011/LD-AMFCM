@@ -67,7 +67,12 @@ def run(quick=False):
                 m_i = mappings.fuzzifier_values(mapping_name, rho_bar)
                 U = fcm.fcm_weighted(
                     X, n_clusters, m_i, w,
-                    random_state=config.SEED_SINGLE_RUN, n_init=1,
+                    random_state=config.SEED_SINGLE_RUN,
+                    n_init=config.n_init_for("exp04_k_sensitivity"),
+                    # The published k-sensitivity curves were produced with
+                    # the negative-power membership form.  See the solver
+                    # docstring and KNOWN_VARIATIONS.md.
+                    membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
                 )
                 records.append({
                     "Dataset": short_name,

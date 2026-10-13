@@ -66,7 +66,9 @@ def run_one_configuration(X, n_clusters, init_seed, n_jobs=DENSITY_N_JOBS):
 
     U, _V, n_iter, init_time, opt_time = fcm.fcm_weighted(
         X, n_clusters, np.ones(len(X)) * 2.0, np.ones(len(X)),
-        random_state=init_seed, n_init=1,
+        random_state=init_seed,
+        n_init=config.n_init_for("exp03_scalability"),
+        membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
         convergence=fcm.PROTOTYPE_MAXSHIFT, return_diagnostics=True,
     )
     results.append({
@@ -89,7 +91,9 @@ def run_one_configuration(X, n_clusters, init_seed, n_jobs=DENSITY_N_JOBS):
         m_i = mappings.fuzzifier_values(mapping_name, rho_bar)
         U, _V, n_iter, init_time, opt_time = fcm.fcm_weighted(
             X, n_clusters, m_i, w,
-            random_state=init_seed, n_init=1,
+            random_state=init_seed,
+            n_init=config.n_init_for("exp03_scalability"),
+            membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
             convergence=fcm.PROTOTYPE_MAXSHIFT, return_diagnostics=True,
         )
         results.append({

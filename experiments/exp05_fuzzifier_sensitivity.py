@@ -101,7 +101,12 @@ def run(quick=False, headline_solver=False):
                     if headline_solver:
                         U = fcm.fcm_weighted(
                             X, n_clusters, m_i, w,
-                            random_state=init_seed, n_init=1,
+                            random_state=init_seed,
+                            n_init=config.n_init_for(
+                                "exp05_fuzzifier_sensitivity"),
+                            # The sweep family uses the negative-power form,
+                            # so its headline counterpart does too.
+                            membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
                         )
                     else:
                         U = fcm.fcm_weighted_random_membership(

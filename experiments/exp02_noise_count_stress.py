@@ -119,7 +119,9 @@ def run(quick=False):
                 m_i, w_i = fuzzifiers[method]
                 U = fcm.fcm_weighted(X, n_clusters, m_i, w_i,
                                      random_state=init_seed,
-                                     n_init=config.KMEANS_N_INIT)
+                                     n_init=config.n_init_for(
+                                         "exp02_noise_count_stress"),
+                                     membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER)
                 ari = metrics.clean_ari(y_true, U.argmax(axis=1))
 
                 records.append({
