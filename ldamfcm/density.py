@@ -3,20 +3,25 @@ Local-density estimation used by LD-AMFCM.
 
 Two estimators appear in the original notebook:
 
-``mean_gaussian_global_median``  (headline configuration)
-    sigma is the median of *all* kNN distances of the matrix, i.e. a single
-    global scalar, and rho_i is the mean of the Gaussian kernels of the k
-    nearest neighbours of i.
+``mean_gaussian_global_median``  (the estimator defined in the manuscript)
+    sigma is the global median of the retained kNN distances,
+    sigma = max(median, 1e-12), and rho_i is the mean of the Gaussian kernels
+    of the k nearest neighbours of i:
 
-``sum_gaussian_perpoint_mean``   (variant, m_min / m_max sweeps only)
-    sigma_i is the mean distance to the k nearest neighbours of i, i.e. a
-    per-point scalar, and rho_i is the *sum* of the Gaussian kernels of those
-    neighbours.
+        rho_i = (1/k) * sum_j exp(-||x_i - x_j||^2 / sigma^2).
+
+    This is the only estimator used by the reported experiments.
+
+``sum_gaussian_perpoint_mean``   (legacy variant, historical reproduction)
+    sigma_i is the mean distance to the k nearest neighbours of i, a per-point
+    scalar, and rho_i is the *sum* of the Gaussian kernels of those
+    neighbours.  This does not match the manuscript definition and is retained
+    only so that the original notebook's m_min / m_max tables can be
+    regenerated; it is not used by any default experiment.
 
 The two are not interchangeable: they give different density values, and
 therefore different weights, different sample-wise fuzzifiers and different
-clusterings.  The variant is reproduced because those sweeps were produced
-with it, and every output produced through it is flagged.
+clusterings.
 """
 
 import numpy as np
@@ -76,9 +81,12 @@ def local_density(X, k=12, estimator=MAIN_ESTIMATOR, algorithm="auto", n_jobs=1)
         raise ValueError("No nearest-neighbour distances available.")
 
     if estimator == MAIN_ESTIMATOR:
-        sigma = np.median(distances)
-        if sigma <= 0:
-            sigma = 1.0
+        # The manuscript defines sigma as the global median of the retained
+        # k-nearest-neighbour distances, floored at 1e-12:
+        #     sigma_tilde = median(distances);  sigma = max(sigma_tilde, 1e-12)
+        # The floor only prevents division by zero when every retained
+        # distance is zero; it does not change any reported result.
+        sigma = max(float(np.median(distances)), 1e-12)
         rho = np.exp(-(distances ** 2) / (sigma ** 2)).mean(axis=1)
     else:  # VARIANT_ESTIMATOR
         sigma = np.mean(distances, axis=1) + 1e-12

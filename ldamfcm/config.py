@@ -39,16 +39,19 @@ TOL = 1e-4              # prototype-change tolerance
 # Solver variant used by the m_min / m_max sweeps
 # ----------------------------------------------------------------------
 
-# The m_min / m_max sweeps in the original notebook were produced with a
-# different density estimator, a random membership initialisation and a
-# membership-change tolerance instead of a prototype-change tolerance.
-# This variant is reproduced exactly as it was run, and is flagged as such in
-# every output table.  See docs/KNOWN_VARIATIONS.md.
+# LEGACY ONLY.  The original notebook produced its m_min / m_max tables with
+# a density estimator that does not match the manuscript definition: a
+# per-point bandwidth and a sum of kernels instead of a global median and a
+# mean.  It is retained solely so those historical tables can be regenerated
+# with `exp05 --legacy-variant`; no default experiment uses it.  See
+# docs/KNOWN_VARIATIONS.md section 1.
 VARIANT_TOL = 1e-5
 VARIANT_DENSITY_ESTIMATOR = "sum_gaussian_perpoint_mean"
 VARIANT_INIT = "random_membership"
 
-# Density estimator used by the headline configuration.
+# Density estimator defined in the manuscript and used by every reported
+# experiment: rho_i = (1/k) sum_j exp(-d^2 / sigma^2) with
+# sigma = max(global median of the retained kNN distances, 1e-12).
 MAIN_DENSITY_ESTIMATOR = "mean_gaussian_global_median"
 MAIN_INIT = "kmeans++"
 

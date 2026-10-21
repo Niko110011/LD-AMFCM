@@ -12,36 +12,47 @@ covered by `smoke_test.py`, which reproduces the published ARI values.
 
 ---
 
-## 1. Preserved: the `m_min` / `m_max` sweep uses a solver variant
+## 1. Resolved: the `m_min` / `m_max` sweep now follows the manuscript
 
 **Affects:** `exp05`.
 
-The sweep over the fuzzifier bounds was produced with a different
-implementation from the headline configuration, differing in three ways:
+The original notebook produced these two tables with an implementation that
+does not match the density estimator defined in the manuscript:
 
-| | headline configuration | sweep variant |
+| | manuscript / headline configuration | original sweep implementation |
 |---|---|---|
-| density estimator | σ = median of all kNN distances (global scalar), ρ = **mean** of Gaussian kernels | σ_i = mean distance to the k neighbours (per point), ρ = **sum** of Gaussian kernels |
+| density estimator | σ = max{global median of kNN distances, 1e-12}, ρ = **mean** of Gaussian kernels | σ_i = mean distance to the k neighbours (per point), ρ = **sum** of Gaussian kernels |
 | initialisation | k-means++ prototypes | random normalised memberships, `RandomState(42)`, prototypes start at zero |
 | stopping rule | ‖V_new − V‖_F < 1e-4 | ‖U_new − U‖_F < 1e-5 |
 | distances in the membership step | squared, stabilised | Euclidean, stabilised |
 
-The two density estimators are not equivalent: the variant has no global
-bandwidth, so the density scale and the resulting weights differ. The two
-initialisations are not equivalent either: a random membership initialisation
-and a k-means++ prototype initialisation do not converge to the same local
-optimum in general.
+**Why it matters.** The variant's normalised density is concentrated near one
+(median 0.894 against 0.517 on Iris). Under the exponential mapping with
+α = 6 that pins 96.5 % of the samples at m_i ≈ m_min = 1.05, so the
+density-derived weights carry no information — they give the same ARI as
+uniform weights — and the whole m_max sweep collapses to a single value. At
+the nominal default point the two implementations disagree:
 
-**What was done.** The variant is reproduced exactly, because the published
-numbers were produced with it, and every output row carries a
-`Configuration` column reading `variant`. `exp05 --headline-solver` runs the
-same grids under the headline configuration instead.
+| Iris, exponential mapping, k = 12, m_min = 1.05, m_max = 3.5 | ARI |
+|---|---|
+| manuscript density, either solver | 0.8176 |
+| original sweep density, either solver | 0.5638 |
 
-**What this means for the paper.** If the sweep is presented as a property of
-the method as configured elsewhere, that is not accurate as things stand. Two
-defensible options: re-run the sweep with `--headline-solver` and report those
-numbers, or state in the text that the sweep was performed with a variant
-solver. The first is recommended; the grid is small.
+Isolation shows the density estimator alone is responsible: the initialisation
+and the membership form make no difference at this point.
+
+**What was done.** `exp05` now defaults to the manuscript estimator and the
+headline solver, so a change in `m_min` or `m_max` is the only difference from
+the default point. Its output is `fuzzifier_sensitivity_paper.csv` and the
+default point now equals the `k` sweep's 0.8176. The original implementation
+is retained behind `--legacy-variant`, which writes
+`fuzzifier_sensitivity_legacy_variant.csv`, so the old notebook tables remain
+reproducible.
+
+**What this means for the paper.** The m_min and m_max tables must be
+regenerated from the default run, not quoted from the original notebook. The
+old m_max table in particular showed an apparent insensitivity that was an
+artefact of the estimator, not a property of the method.
 
 ---
 
@@ -126,7 +137,8 @@ output rather than merely reorganise it.
 
 ## 6. Repaired: a convergence test that compared a quantity with itself
 
-**Affects:** the random-membership solver, used by `exp05`.
+**Affects:** the random-membership solver, used by `exp05 --legacy-variant`
+only. The default `exp05` configuration does not use this solver.
 
 The original membership-update loop assigned the new memberships to the
 variable before testing the change, so the test evaluated
@@ -138,11 +150,12 @@ solvers iterate until the memberships actually stabilise. This is the
 documented intent of the variant's `tol = 1e-5` setting; under the original
 behaviour that setting had no effect and the parameter was inert.
 
-**Consequence.** `exp05` numbers regenerated here are expected to differ from
-the originally reported sweep, and they should be the ones quoted. This is the
-one repair that cannot be neutral, because the original code did not do what
-its own parameter said it did. Note that this interacts with item 1: if the
-sweep is re-run with `--headline-solver`, both items are resolved at once.
+**Consequence.** The legacy table regenerated here differs from the originally
+reported sweep, because the original code did not do what its own parameter
+said it did. This repair no longer affects any default experiment: item 1
+moved `exp05` onto the manuscript estimator and the headline solver, neither of
+which uses this code path. It matters only when reproducing the historical
+table with `--legacy-variant`.
 
 ---
 
@@ -193,7 +206,7 @@ statement than "negligible".
 |---|---|
 | ‖V_new − V‖_F < 1e-4 | all main experiments |
 | max_k ‖v_k^new − v_k‖ < 1e-4 | `exp03` (scalability) |
-| ‖U_new − U‖_F < 1e-5 | `exp05` (sweep variant) |
+| ‖U_new − U‖_F < 1e-5 | `exp05 --legacy-variant` only |
 
 All three use the same tolerance of 1e-4 except the variant. The scalability
 study's rule is strictly stricter than the Frobenius rule for the same
@@ -396,12 +409,12 @@ The ratio form does not show this.
 
 | # | Item | Status | May change published numbers |
 |---|---|---|---|
-| 1 | fuzzifier sweep uses a different solver | preserved, flagged | no (reproduces them) |
+| 1 | fuzzifier sweep density estimator | resolved: default follows the manuscript, legacy behind a flag | yes, `exp05` must be regenerated |
 | 2 | DBSCAN oracle-tuned | preserved, declared | no |
 | 3 | two benchmark seeding conventions | preserved, both implemented | no |
 | 4 | paired study depends on the global generator | preserved, flagged | no |
 | 5 | contamination drawn without resetting the generator | **repaired** | **yes, `exp09` and `exp10`** |
-| 6 | convergence test compared a quantity with itself | **repaired** | **yes, `exp05`** |
+| 6 | convergence test compared a quantity with itself | **repaired** | only `exp05 --legacy-variant` |
 | 7 | membership update divided a row by itself | repaired (vectorisation) | no |
 | 8 | three stopping rules | noted | no |
 | 9 | `n_init` differs between families | noted | no |

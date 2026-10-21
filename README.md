@@ -127,18 +127,17 @@ Two configurations appear in this package that are **not** the headline
 configuration. They are reproduced because the published numbers were produced
 with them, and every table they generate is labelled accordingly.
 
-1. **The `m_min` / `m_max` sweep uses a solver variant.** Different density
-   estimator (per-point bandwidth, sum of Gaussian kernels rather than mean
-   with a global median bandwidth), random membership initialisation and a
-   membership-change stopping rule at `1e-5`. Every row of `exp05` carries a
-   `Configuration` column reading `variant`.
+1. **The `m_min` / `m_max` sweep now follows the manuscript.** It previously
+   used a different density estimator (per-point bandwidth, sum of Gaussian
+   kernels), which pinned most fuzzifiers at `m_min`, made the density weights
+   uninformative and flattened the whole `m_max` table. `exp05` now uses the
+   manuscript estimator and the headline solver; its default point matches the
+   `k` sweep. The original implementation is behind `--legacy-variant` for
+   historical reproduction. See `docs/KNOWN_VARIATIONS.md` §1.
 
 2. **DBSCAN is a reference-tuned upper bound.** Its two hyperparameters are
    searched over a declared grid and the configuration with the best ARI on
    the clean ground truth is reported. It is not an untuned competitor.
-
-`exp05 --headline-solver` runs the same grids under the headline configuration
-instead, which is the form to report if the sweep is ever re-run.
 
 3. **The scalability timings measure thread start-up.** `exp03` defaults to
    `n_jobs=-1` for the exact kNN search, as the original did, and in this

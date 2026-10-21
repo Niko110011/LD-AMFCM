@@ -1,9 +1,10 @@
 {
   "cpu_count": 16,
   "experiment": {
-    "configuration": "variant",
-    "density_estimator": "sum_gaussian_perpoint_mean",
-    "initialisation": "random membership, RandomState(42)",
+    "configuration": "paper",
+    "density_definition": "rho = (1/k) sum_j exp(-d^2 / sigma^2), sigma = max(global median kNN distance, 1e-12)",
+    "density_estimator": "mean_gaussian_global_median",
+    "initialisation": "k-means++",
     "m_max_grid": [
       2.0,
       2.5,
@@ -21,7 +22,7 @@
       1.5
     ],
     "protocol": "frozen input; per-benchmark data seed 42; single run",
-    "stopping_rule": "|U_new - U| < 1e-5"
+    "stopping_rule": "|V_new - V| < 1e-4"
   },
   "machine": "AMD64",
   "packages": {
@@ -38,5 +39,5 @@
   "python_version": "3.7.0",
   "release": "10",
   "system": "Windows",
-  "timestamp": "2026-10-13 16:04:14"
+  "timestamp": "2026-10-21 14:04:42"
 }

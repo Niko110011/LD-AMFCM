@@ -40,12 +40,12 @@ The authoritative definition is `ldamfcm/config.py`.
 | Item | Setting |
 |---|---|
 | Neighbourhood size | k = 12; exact Euclidean kNN, self-distance dropped |
-| Bandwidth (headline) | σ = median of all kNN distances of the matrix, one global scalar; fallback σ = 1 if σ ≤ 0 |
+| Bandwidth | σ̃ = global median of the retained kNN distances (one scalar); σ = max{σ̃, 10⁻¹²}, exactly as defined in the manuscript |
 | Raw density | ρ_i = (1/k) · Σ_j exp(−d_ij² / σ²) over the k nearest neighbours of i |
 | Normalised density | ρ̄_i = (ρ_i − min ρ) / (max ρ − min ρ + 1e-12) |
 | Sample weights | w_i = ρ_i / Σ_j ρ_j, denominator guarded by 1e-12 |
 | Mapping direction | ρ̄ = 1 (core) → m_i → m_min, crisp; ρ̄ = 0 (periphery) → m_i → m_max, fuzzy. Identical for all three mappings |
-| **Variant** used by the m_min / m_max sweeps | Different estimator: σ_i = mean distance to the k neighbours, ρ_i = Σ_j exp(−d_ij² / 2σ_i²); random normalised membership initialisation U ~ U(0,1) with `RandomState(42)`; stopping rule ‖U_new − U‖ < 1e-5. Flagged in every output row; not used for the headline configuration |
+| Legacy estimator (historical reproduction only) | σ_i = mean distance to the k neighbours, ρ_i = Σ_j exp(−d_ij² / 2σ_i²), i.e. per-point bandwidth and a sum of kernels. This does **not** match the manuscript definition and is used only by `exp05 --legacy-variant`. It is never used by a default experiment |
 
 ---
 
@@ -74,8 +74,8 @@ Two settings are not global. Both are registered per experiment in
 | `exp02` noise-count stress | 1 | negative-power |
 | `exp03` scalability | 1 | negative-power |
 | `exp04` neighbourhood size k | 1 | negative-power |
-| `exp05` fuzzifier bounds (variant) | not used | negative-power |
-| `exp05` fuzzifier bounds (`--headline-solver`) | 1 | negative-power |
+| `exp05` fuzzifier bounds (default, manuscript configuration) | 1 | ratio |
+| `exp05` fuzzifier bounds (`--legacy-variant`) | not used | negative-power |
 | `exp06` baseline comparison | 10 | ratio |
 | `exp07` density-reliability stress | 10 | ratio |
 | `exp08` ablation | 10 | ratio |

@@ -117,11 +117,25 @@ configuration also reproduce, as the `exp06` row shows.
 
 | Experiment | Why | Action |
 |---|---|---|
-| `exp05` | convergence test repair, `KNOWN_VARIATIONS.md` §6 | regenerate and quote the new sweep |
+| `exp05` | the original sweep used a density estimator that does not match the manuscript, `KNOWN_VARIATIONS.md` §1 | regenerate with the default (paper) configuration and quote those numbers; the legacy table is available behind `--legacy-variant` |
 | `exp09` | contamination drawn without an explicit seed originally, §5 | regenerate and quote the new numbers |
 | `exp10` | same, plus timings are machine specific | quote relative magnitudes only |
 
 Everything else reproduces the published values.
+
+### `exp05` default point after the density alignment
+
+On Iris with the exponential mapping, `k = 12`, `m_min = 1.05`,
+`m_max = 3.5`:
+
+| configuration | ARI |
+|---|---|
+| `exp04` (k sweep, `k = 12`) | 0.8176 |
+| `exp05` default, `m_min = 1.05` | **0.8176** |
+| `exp05` default, `m_max = 3.5` | **0.8176** |
+| `exp05 --legacy-variant` | 0.5638 |
+
+The three tables now agree at the shared default point.
 
 ---
 
