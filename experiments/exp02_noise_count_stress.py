@@ -71,9 +71,12 @@ def build(noise_count, data_seed):
     return StandardScaler().fit_transform(X_mixed), y_mixed
 
 
-def run(quick=False):
+def run(quick=False, legacy_membership=False):
     experiment = "exp02_noise_count_stress"
     seed_spec = config.SEEDS_NOISE_COUNT
+
+    membership_form = (fcm.MEMBERSHIP_NEGATIVE_POWER if legacy_membership
+                       else fcm.MEMBERSHIP_RATIO)
 
     io_utils.write_environment_report(experiment, extra={
         "protocol": "regenerated input",
@@ -82,6 +85,7 @@ def run(quick=False):
         "n_runs": seed_spec.n_runs,
         "noise_counts": config.NOISE_COUNT_GRID,
         "adaptive_mapping": MAPPING,
+        "membership_form": membership_form,
     })
     plt = io_utils.configure_matplotlib()
 
@@ -121,7 +125,7 @@ def run(quick=False):
                                      random_state=init_seed,
                                      n_init=config.n_init_for(
                                          "exp02_noise_count_stress"),
-                                     membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER)
+                                     membership_form=membership_form)
                 ari = metrics.clean_ari(y_true, U.argmax(axis=1))
 
                 records.append({
@@ -135,7 +139,9 @@ def run(quick=False):
         print("  noise count {:>4d} done".format(noise_count))
 
     raw = pd.DataFrame(records)
-    io_utils.save_table(raw, experiment, "noise_count_stress_raw.csv")
+    suffix = "_legacy" if legacy_membership else ""
+    io_utils.save_table(raw, experiment,
+                        "noise_count_stress_raw{}.csv".format(suffix))
 
     summary = (
         raw.groupby(["Noise_Count", "Method"])["ARI"]
@@ -143,7 +149,9 @@ def run(quick=False):
         .reset_index()
         .rename(columns={"mean": "ARI_Mean", "std": "ARI_Std"})
     )
-    io_utils.save_table(summary, experiment, "noise_count_stress_summary.csv")
+    io_utils.save_table(
+        summary, experiment,
+        "noise_count_stress_summary{}.csv".format(suffix))
 
     # ---- figure --------------------------------------------------------
     fig, ax = plt.subplots(figsize=(10, 6), dpi=100)
@@ -169,7 +177,9 @@ def run(quick=False):
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="best")
     fig.tight_layout()
-    io_utils.save_figure(fig, experiment, "robustness_stress_test.png")
+    io_utils.save_figure(
+        fig, experiment,
+        "robustness_stress_test{}.png".format(suffix))
     plt.close(fig)
 
     print("\nExperiment 2 finished.")
@@ -179,8 +189,12 @@ def run(quick=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--quick", action="store_true")
+    parser.add_argument("--legacy-membership", action="store_true",
+                        help="use the negative-power membership form used by "
+                             "the original notebook; the default is the ratio "
+                             "form used by the headline configuration")
     args = parser.parse_args()
-    run(quick=args.quick)
+    run(quick=args.quick, legacy_membership=args.legacy_membership)
 
 
 if __name__ == "__main__":

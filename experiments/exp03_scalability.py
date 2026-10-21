@@ -60,7 +60,8 @@ DENSITY_ALGORITHM = "brute"
 DENSITY_N_JOBS = -1
 
 
-def run_one_configuration(X, n_clusters, init_seed, n_jobs=DENSITY_N_JOBS):
+def run_one_configuration(X, n_clusters, init_seed, n_jobs=DENSITY_N_JOBS,
+                          membership_form=fcm.MEMBERSHIP_RATIO):
     """Time FCM and the three LD-AMFCM mappings on one configuration."""
     results = []
 
@@ -68,7 +69,7 @@ def run_one_configuration(X, n_clusters, init_seed, n_jobs=DENSITY_N_JOBS):
         X, n_clusters, np.ones(len(X)) * 2.0, np.ones(len(X)),
         random_state=init_seed,
         n_init=config.n_init_for("exp03_scalability"),
-        membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
+        membership_form=membership_form,
         convergence=fcm.PROTOTYPE_MAXSHIFT, return_diagnostics=True,
     )
     results.append({
@@ -93,7 +94,7 @@ def run_one_configuration(X, n_clusters, init_seed, n_jobs=DENSITY_N_JOBS):
             X, n_clusters, m_i, w,
             random_state=init_seed,
             n_init=config.n_init_for("exp03_scalability"),
-            membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
+            membership_form=membership_form,
             convergence=fcm.PROTOTYPE_MAXSHIFT, return_diagnostics=True,
         )
         results.append({
@@ -108,7 +109,8 @@ def run_one_configuration(X, n_clusters, init_seed, n_jobs=DENSITY_N_JOBS):
     return results
 
 
-def sweep(experiment, axis, values, seeds, n_jobs=DENSITY_N_JOBS):
+def sweep(experiment, axis, values, seeds, n_jobs=DENSITY_N_JOBS,
+          membership_form=fcm.MEMBERSHIP_RATIO, suffix=""):
     """Run the sweep over either the sample size or the dimensionality.
 
     ``axis="n"`` varies the sample count at fixed ``p = FIXED_P``;
@@ -131,14 +133,15 @@ def sweep(experiment, axis, values, seeds, n_jobs=DENSITY_N_JOBS):
             )
             X = datasets.standardize(X_raw)
 
-            for row in run_one_configuration(X, n_clusters, init_seed,
-                                             n_jobs=n_jobs):
+            for row in run_one_configuration(
+                    X, n_clusters, init_seed, n_jobs=n_jobs,
+                    membership_form=membership_form):
                 row.update({"n": n, "p": p, "Seed": init_seed, "Axis": axis})
                 records.append(row)
 
     raw = pd.DataFrame(records)
     io_utils.save_table(raw, experiment,
-                        "scalability_{}_raw.csv".format(axis))
+                        "scalability_{}_raw{}.csv".format(axis, suffix))
 
     summary = (
         raw.groupby(["Method", "n", "p"])
@@ -153,11 +156,11 @@ def sweep(experiment, axis, values, seeds, n_jobs=DENSITY_N_JOBS):
         "_".join(str(x) for x in col).strip("_") for col in summary.columns
     ]
     io_utils.save_table(summary, experiment,
-                        "scalability_{}_summary.csv".format(axis))
+                        "scalability_{}_summary{}.csv".format(axis, suffix))
     return summary
 
 
-def plot_axis(summary, axis, experiment):
+def plot_axis(summary, axis, experiment, suffix=""):
     plt = io_utils.configure_matplotlib()
     grid_key = axis if axis in ("n", "p") else "n"
 
@@ -174,7 +177,7 @@ def plot_axis(summary, axis, experiment):
     ax.legend()
     fig.tight_layout()
     io_utils.save_figure(fig, experiment,
-                         "scalability_{}_total_time.png".format(axis))
+                         "scalability_{}_total_time{}.png".format(axis, suffix))
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(9, 6))
@@ -191,13 +194,18 @@ def plot_axis(summary, axis, experiment):
     ax.legend()
     fig.tight_layout()
     io_utils.save_figure(fig, experiment,
-                         "scalability_{}_density_time.png".format(axis))
+                         "scalability_{}_density_time{}.png".format(
+                             axis, suffix))
     plt.close(fig)
 
 
-def run(quick=False, n_jobs=DENSITY_N_JOBS):
+def run(quick=False, n_jobs=DENSITY_N_JOBS, legacy_membership=False):
     experiment = "exp03_scalability"
     seeds = list(range(2 if quick else config.N_REPEATS_SCALABILITY))
+
+    membership_form = (fcm.MEMBERSHIP_NEGATIVE_POWER if legacy_membership
+                       else fcm.MEMBERSHIP_RATIO)
+    suffix = "_legacy" if legacy_membership else ""
 
     io_utils.write_environment_report(experiment, extra={
         "protocol": "frozen synthetic data, generator seed {}".format(
@@ -209,6 +217,7 @@ def run(quick=False, n_jobs=DENSITY_N_JOBS):
         "fixed_n": config.FIXED_N,
         "density_algorithm": DENSITY_ALGORITHM,
         "density_n_jobs": n_jobs,
+        "membership_form": membership_form,
         "timing": "time.perf_counter, wall-clock seconds",
         "caveat": ("n_jobs=-1 measures worker-pool start-up in this "
                    "environment; use --n-jobs 1 for algorithmic timings"
@@ -221,12 +230,14 @@ def run(quick=False, n_jobs=DENSITY_N_JOBS):
     started = time.perf_counter()
 
     print("\nsample-size sweep")
-    summary_n = sweep(experiment, "n", n_values, seeds, n_jobs=n_jobs)
-    plot_axis(summary_n, "n", experiment)
+    summary_n = sweep(experiment, "n", n_values, seeds, n_jobs=n_jobs,
+                      membership_form=membership_form, suffix=suffix)
+    plot_axis(summary_n, "n", experiment, suffix=suffix)
 
     print("\ndimensionality sweep")
-    summary_p = sweep(experiment, "p", p_values, seeds, n_jobs=n_jobs)
-    plot_axis(summary_p, "p", experiment)
+    summary_p = sweep(experiment, "p", p_values, seeds, n_jobs=n_jobs,
+                      membership_form=membership_form, suffix=suffix)
+    plot_axis(summary_p, "p", experiment, suffix=suffix)
 
     print("\nExperiment 3 finished in {:.2f} s.".format(
         time.perf_counter() - started))
@@ -241,8 +252,13 @@ def main():
                              "of -1 reproduces the published figure but "
                              "measures worker-pool start-up; use 1 for "
                              "timings that reflect the algorithm")
+    parser.add_argument("--legacy-membership", action="store_true",
+                        help="use the negative-power membership form used by "
+                             "the original notebook; the default is the ratio "
+                             "form used by the headline configuration")
     args = parser.parse_args()
-    run(quick=args.quick, n_jobs=args.n_jobs)
+    run(quick=args.quick, n_jobs=args.n_jobs,
+        legacy_membership=args.legacy_membership)
 
 
 if __name__ == "__main__":

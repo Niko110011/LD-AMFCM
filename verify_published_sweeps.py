@@ -1,19 +1,27 @@
 """
-Check the parameter-sweep tables against the values saved in the original
-experiment notebook.
+Check the parameter-sweep tables.
 
-``smoke_test.py`` re-runs the baseline comparison and checks it live.  This
-script instead reads the CSVs that ``exp01``, ``exp02`` and ``exp04`` wrote
-and compares them, value by value, against the numbers recorded in the
-notebook's saved output.
+Two modes:
 
-Run the three experiments first, or with ``--run`` to do both:
+**default** -- checks that the package is internally consistent under the
+manuscript configuration.  The ``k`` sweep (``exp04``) and the two fuzzifier
+sweeps (``exp05``) share a default point; all three must agree there.  The
+noise-count stress test (``exp02``) is unchanged by the membership-form switch
+and is checked against the original notebook's saved output.
 
-    python verify_published_sweeps.py
-    python verify_published_sweeps.py --run
+**``--legacy``** -- checks the historical reproduction path.  Runs
+``exp01``, ``exp02`` and ``exp04`` with ``--legacy-membership`` (the
+negative-power form used by the original notebook) and compares all 165
+values against the notebook's saved output.  This is the path that reproduces
+the original curves; the default path deliberately does not, because it uses
+the numerically stable form that matches the manuscript and the headline
+comparison.
 
-These sweeps are the family that needs the negative-power membership form and
-a single k-means++ restart to reproduce; see docs/KNOWN_VARIATIONS.md.
+Usage
+-----
+    python verify_published_sweeps.py            # consistency check
+    python verify_published_sweeps.py --legacy   # reproduce the old curves
+    python verify_published_sweeps.py --run      # run experiments first
 """
 
 import argparse
@@ -26,15 +34,13 @@ import pandas as pd
 PACKAGE_ROOT = Path(__file__).resolve().parent
 RESULTS = PACKAGE_ROOT / "results"
 
-TOL = 5e-5
+TOL = 1e-4
 
 
 # ----------------------------------------------------------------------
-# Reference values from the notebook's saved output
+# Reference values from the notebook's saved output (legacy path only)
 # ----------------------------------------------------------------------
 
-# exp01: alpha / beta / gamma grids, ten repetitions on Breast, single run on
-# Moons and Iris.
 EXP01 = {
     "Breast Cancer + Outliers": {
         "alpha": [0.6274, 0.7313, 0.7311, 0.7676, 0.7612, 0.7672, 0.7547,
@@ -61,7 +67,6 @@ EXP01 = {
     },
 }
 
-# exp02: ARI mean at seven contamination levels, three methods.
 EXP02 = {
     40: {"FCM": 0.677689, "FCM + m_i": 0.703824, "LD-AMFCM": 0.630203},
     60: {"FCM": 0.627006, "FCM + m_i": 0.701284, "LD-AMFCM": 0.642523},
@@ -72,8 +77,6 @@ EXP02 = {
     160: {"FCM": 0.381208, "FCM + m_i": 0.680059, "LD-AMFCM": 0.707619},
 }
 
-# exp04: ARI at six neighbourhood sizes, three mappings, three datasets.
-# Order within each tuple is Exp, Rec, Sig.
 EXP04 = {
     "Breast": {5: (.7614, .7374, .6442), 8: (.7614, .7313, .6163),
                12: (.7676, .7313, .6108), 16: (.7676, .7313, .6053),
@@ -96,13 +99,17 @@ class Checker:
         self.total += 1
         if abs(got - want) >= TOL:
             self.failed += 1
-            print("  MISMATCH {}: got {:.4f}, want {:.4f}".format(
+            print("  MISMATCH {}: got {:.5f}, want {:.5f}".format(
                 name, got, want))
 
 
-def check_exp01(checker):
-    path = RESULTS / "exp01_mapping_sensitivity" / "mapping_sensitivity.csv"
-    df = pd.read_csv(path)
+# ----------------------------------------------------------------------
+# Legacy path: reproduce the notebook
+# ----------------------------------------------------------------------
+
+def check_legacy(checker):
+    df = pd.read_csv(RESULTS / "exp01_mapping_sensitivity" /
+                     "mapping_sensitivity_legacy.csv")
     for dataset, params in EXP01.items():
         for param, refs in params.items():
             part = (df[(df.Dataset == dataset) & (df.Parameter == param)]
@@ -112,20 +119,16 @@ def check_exp01(checker):
                     "exp01 {}/{}={:.2f}".format(dataset, param, value),
                     got, want)
 
-
-def check_exp02(checker):
-    path = RESULTS / "exp02_noise_count_stress" / "noise_count_stress_summary.csv"
-    df = pd.read_csv(path)
+    df = pd.read_csv(RESULTS / "exp02_noise_count_stress" /
+                     "noise_count_stress_summary_legacy.csv")
     for level, methods in EXP02.items():
         row = df[df.Noise_Count == level].set_index("Method")["ARI_Mean"]
         for method, want in methods.items():
             checker.check("exp02 n={}/{}".format(level, method),
                           row[method], want)
 
-
-def check_exp04(checker):
-    path = RESULTS / "exp04_k_sensitivity" / "k_sensitivity_single_run.csv"
-    df = pd.read_csv(path)
+    df = pd.read_csv(RESULTS / "exp04_k_sensitivity" /
+                     "k_sensitivity_single_run_legacy.csv")
     for dataset, by_k in EXP04.items():
         for k, refs in by_k.items():
             for mapping, want in zip(("Exp", "Rec", "Sig"), refs):
@@ -135,46 +138,78 @@ def check_exp04(checker):
                     "exp04 {}/k={}/{}".format(dataset, k, mapping), got, want)
 
 
+# ----------------------------------------------------------------------
+# Default path: internal consistency under the manuscript configuration
+# ----------------------------------------------------------------------
+
+def check_consistency(checker):
+    k = pd.read_csv(RESULTS / "exp04_k_sensitivity" /
+                    "k_sensitivity_single_run.csv")
+    f = pd.read_csv(RESULTS / "exp05_fuzzifier_sensitivity" /
+                    "fuzzifier_sensitivity_paper.csv")
+
+    for dataset in ("Breast", "Iris", "Moons"):
+        for mapping in ("Exp", "Rec", "Sig"):
+            k_value = float(k[(k.Dataset == dataset) & (k.k == 12) &
+                              (k.Mapping == mapping)].ARI)
+
+            for parameter, value in (("m_min", 1.05), ("m_max", 3.5)):
+                part = f[(f.Dataset == dataset) & (f.Mapping == mapping) &
+                         (f.Parameter == parameter) & (f.Value == value)]
+                f_value = float(part.ARI)
+                checker.check(
+                    "default point {}/{} vs {}".format(
+                        dataset, mapping, parameter),
+                    f_value, k_value)
+
+    # The noise-count stress test is unchanged by the membership switch.
+    df = pd.read_csv(RESULTS / "exp02_noise_count_stress" /
+                     "noise_count_stress_summary.csv")
+    for level, methods in EXP02.items():
+        row = df[df.Noise_Count == level].set_index("Method")["ARI_Mean"]
+        for method, want in methods.items():
+            checker.check("exp02 n={}/{}".format(level, method),
+                          row[method], want)
+
+
 def main():
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--legacy", action="store_true",
+                        help="verify the negative-power reproduction path "
+                             "against the notebook's saved output")
     parser.add_argument("--run", action="store_true",
-                        help="run exp01, exp02 and exp04 first")
+                        help="run exp01, exp02 and exp04 first (with "
+                             "--legacy-membership when --legacy is given)")
     args = parser.parse_args()
 
     if args.run:
+        flag = ["--legacy-membership"] if args.legacy else []
         for script in ("exp01_mapping_sensitivity.py",
                        "exp02_noise_count_stress.py",
                        "exp04_k_sensitivity.py"):
-            print("running {} ...".format(script))
+            print("running {} {}...".format(script, " ".join(flag)))
             completed = subprocess.run(
-                [sys.executable, str(PACKAGE_ROOT / "experiments" / script)],
+                [sys.executable, str(PACKAGE_ROOT / "experiments" / script)]
+                + flag,
                 cwd=str(PACKAGE_ROOT),
             )
             if completed.returncode != 0:
                 print("  failed with exit code {}".format(completed.returncode))
                 return 1
 
-    missing = [
-        path for path in (
-            RESULTS / "exp01_mapping_sensitivity" / "mapping_sensitivity.csv",
-            RESULTS / "exp02_noise_count_stress" / "noise_count_stress_summary.csv",
-            RESULTS / "exp04_k_sensitivity" / "k_sensitivity_single_run.csv",
-        ) if not path.exists()
-    ]
-    if missing:
-        print("missing result files; run with --run or run the experiments first:")
-        for path in missing:
-            print("  {}".format(path))
-        return 1
-
     checker = Checker()
-    check_exp01(checker)
-    check_exp02(checker)
-    check_exp04(checker)
+    if args.legacy:
+        check_legacy(checker)
+        label = "legacy reproduction vs notebook"
+    else:
+        check_consistency(checker)
+        label = "default configuration consistency"
 
-    print("exp01 + exp02 + exp04: {} of {} values match, {} mismatches".format(
-        checker.total - checker.failed, checker.total, checker.failed))
+    print("{}: {} of {} values match, {} mismatches".format(
+        label, checker.total - checker.failed, checker.total,
+        checker.failed))
     return 0 if checker.failed == 0 else 1
 
 

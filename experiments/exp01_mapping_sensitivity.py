@@ -14,6 +14,11 @@ the initialisation seed varies between repetitions.
 Only one grid constant is varied at a time; the other two stay at the
 headline values alpha=6, beta=8, gamma=12.
 
+By default the solver uses the ratio membership form, as the headline
+configuration does.  ``--legacy-membership`` switches to the negative-power
+form used by the original notebook, which reproduces its saved curves and
+writes ``mapping_sensitivity_legacy.csv``.
+
 Usage
 -----
     python experiments/exp01_mapping_sensitivity.py
@@ -52,12 +57,17 @@ MAPPING_FOR_PARAMETER = {"alpha": "Exp", "beta": "Rec", "gamma": "Sig"}
 CONSTANTS = {"alpha": config.ALPHA, "beta": config.BETA, "gamma": config.GAMMA}
 
 
-def run(quick=False):
+def run(quick=False, legacy_membership=False):
     experiment = "exp01_mapping_sensitivity"
+
+    membership_form = (fcm.MEMBERSHIP_NEGATIVE_POWER if legacy_membership
+                       else fcm.MEMBERSHIP_RATIO)
+
     io_utils.write_environment_report(experiment, extra={
         "protocol": "frozen input; per-benchmark data seed 42",
         "varied": "alpha, beta, gamma (one at a time)",
         "constant": CONSTANTS,
+        "membership_form": membership_form,
     })
     plt = io_utils.configure_matplotlib()
 
@@ -100,11 +110,7 @@ def run(quick=False):
                         X, n_clusters, m_i, w,
                         random_state=init_seed,
                         n_init=config.n_init_for("exp01_mapping_sensitivity"),
-                        # The published alpha/beta/gamma curves were produced
-                        # with the negative-power membership form, whose 1e-12
-                        # guard dominates for crisp samples.  See the solver
-                        # docstring and KNOWN_VARIATIONS.md.
-                        membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
+                        membership_form=membership_form,
                     )
                     aris.append(metrics.clean_ari(y_true, U.argmax(axis=1)))
 
@@ -120,7 +126,9 @@ def run(quick=False):
             print("  {:>5s} grid done".format(parameter))
 
     df = pd.DataFrame(records)
-    io_utils.save_table(df, experiment, "mapping_sensitivity.csv")
+    filename = ("mapping_sensitivity_legacy.csv" if legacy_membership
+                else "mapping_sensitivity.csv")
+    io_utils.save_table(df, experiment, filename)
 
     # ---- figures -------------------------------------------------------
     for benchmark_name in PROTOCOL:
@@ -156,8 +164,9 @@ def run(quick=False):
 
             io_utils.save_figure(
                 fig, experiment,
-                "sensitivity_{}_{}.png".format(
-                    parameter, benchmark_name.split()[0].lower()),
+                "sensitivity_{}_{}{}.png".format(
+                    parameter, benchmark_name.split()[0].lower(),
+                    "_legacy" if legacy_membership else ""),
             )
             plt.close(fig)
 
@@ -169,8 +178,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--quick", action="store_true",
                         help="truncate the grids for a fast check")
+    parser.add_argument("--legacy-membership", action="store_true",
+                        help="use the negative-power membership form, which "
+                             "reproduces the original notebook's curves; the "
+                             "default is the ratio form used by the headline "
+                             "configuration")
     args = parser.parse_args()
-    run(quick=args.quick)
+    run(quick=args.quick, legacy_membership=args.legacy_membership)
 
 
 if __name__ == "__main__":

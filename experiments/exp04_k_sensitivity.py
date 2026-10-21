@@ -9,6 +9,11 @@ initialisation seed 42 on a frozen contaminated matrix.
 Note that this analysis used a single k-means++ restart, unlike the comparison
 table which used ten.
 
+By default the solver uses the ratio membership form, as the headline
+configuration does.  ``--legacy-membership`` switches to the negative-power
+form used by the original notebook, which reproduces its saved curve and
+writes ``k_sensitivity_single_run_legacy.csv``.
+
 Usage
 -----
     python experiments/exp04_k_sensitivity.py
@@ -35,14 +40,18 @@ BENCHMARKS = [
 ]
 
 
-def run(quick=False):
+def run(quick=False, legacy_membership=False):
     experiment = "exp04_k_sensitivity"
+
+    membership_form = (fcm.MEMBERSHIP_NEGATIVE_POWER if legacy_membership
+                       else fcm.MEMBERSHIP_RATIO)
 
     io_utils.write_environment_report(experiment, extra={
         "protocol": "frozen input; per-benchmark data seed 42; single run",
         "init_seed": config.SEED_SINGLE_RUN,
         "k_values": config.K_GRID,
         "kmeans_n_init": 1,
+        "membership_form": membership_form,
     })
     plt = io_utils.configure_matplotlib()
 
@@ -69,10 +78,7 @@ def run(quick=False):
                     X, n_clusters, m_i, w,
                     random_state=config.SEED_SINGLE_RUN,
                     n_init=config.n_init_for("exp04_k_sensitivity"),
-                    # The published k-sensitivity curves were produced with
-                    # the negative-power membership form.  See the solver
-                    # docstring and KNOWN_VARIATIONS.md.
-                    membership_form=fcm.MEMBERSHIP_NEGATIVE_POWER,
+                    membership_form=membership_form,
                 )
                 records.append({
                     "Dataset": short_name,
@@ -84,7 +90,9 @@ def run(quick=False):
         print("  {} done".format(short_name))
 
     df = pd.DataFrame(records)
-    io_utils.save_table(df, experiment, "k_sensitivity_single_run.csv")
+    filename = ("k_sensitivity_single_run_legacy.csv" if legacy_membership
+                else "k_sensitivity_single_run.csv")
+    io_utils.save_table(df, experiment, filename)
 
     # ---- one figure per dataset, one per mapping -----------------------
     for short_name, _ in BENCHMARKS:
@@ -104,8 +112,10 @@ def run(quick=False):
         ax.grid(True, linestyle="--", alpha=0.5)
         ax.legend()
         fig.tight_layout()
-        io_utils.save_figure(fig, experiment,
-                             "k_sensitivity_{}.png".format(short_name.lower()))
+        io_utils.save_figure(
+            fig, experiment,
+            "k_sensitivity_{}{}.png".format(
+                short_name.lower(), "_legacy" if legacy_membership else ""))
         plt.close(fig)
 
     print("\nExperiment 4 finished.")
@@ -115,8 +125,12 @@ def run(quick=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--quick", action="store_true")
+    parser.add_argument("--legacy-membership", action="store_true",
+                        help="use the negative-power membership form used by "
+                             "the original notebook; the default is the ratio "
+                             "form used by the headline configuration")
     args = parser.parse_args()
-    run(quick=args.quick)
+    run(quick=args.quick, legacy_membership=args.legacy_membership)
 
 
 if __name__ == "__main__":

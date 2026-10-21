@@ -70,12 +70,13 @@ Two settings are not global. Both are registered per experiment in
 
 | Experiment | k-means++ restarts | Membership update |
 |---|---|---|
-| `exp01` mapping sensitivity | 1 | negative-power |
-| `exp02` noise-count stress | 1 | negative-power |
-| `exp03` scalability | 1 | negative-power |
-| `exp04` neighbourhood size k | 1 | negative-power |
-| `exp05` fuzzifier bounds (default, manuscript configuration) | 1 | ratio |
-| `exp05` fuzzifier bounds (`--legacy-variant`) | not used | negative-power |
+| `exp01` mapping sensitivity | 1 | ratio |
+| `exp02` noise-count stress | 1 | ratio |
+| `exp03` scalability | 1 | ratio |
+| `exp04` neighbourhood size k | 1 | ratio |
+| `exp05` fuzzifier bounds | 1 | ratio |
+| `exp01`–`exp04` with `--legacy-membership` | 1 (not used for `exp05`) | negative-power |
+| `exp05` with `--legacy-variant` | not used | negative-power |
 | `exp06` baseline comparison | 10 | ratio |
 | `exp07` density-reliability stress | 10 | ratio |
 | `exp08` ablation | 10 | ratio |
@@ -95,9 +96,10 @@ additive 1e-12 guard stops being a rounding protector and becomes the dominant
 term of the denominator, so affected rows no longer sum to one:
 
 * *ratio* — `u_ij = 1 / sum_k (d_ij / d_ik) ** (1 / (m_i - 1))`; every row is
-  normalised by construction.
+  normalised by construction. **This is the default for every experiment.**
 * *negative-power* — `inv = d ** (-1 / (m_i - 1)); u = inv / (sum(inv) + 1e-12)`;
-  the form the sweep family was produced with.
+  retained only behind `--legacy-membership` (and `exp05 --legacy-variant`)
+  to regenerate the original notebook's tables.
 
 See `KNOWN_VARIATIONS.md` §14, which also gives the affected values.
 

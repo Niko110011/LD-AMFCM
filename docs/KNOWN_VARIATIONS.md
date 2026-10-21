@@ -378,10 +378,23 @@ sweeps spend most of their grid:
 | `exp04` | Breast, `k = 12`, Exp | 0.7371 | 0.7676 | 0.7676 |
 
 **What was done.** Both forms are implemented,
-`fcm_weighted(..., membership_form=...)`, and each experiment uses the one it
-was originally run with. This is recorded in `config.py` and stated in the
-parameter register. `verify_published_sweeps.py` checks the sweep family
-against the notebook's saved output: 165 of 165 values match.
+`fcm_weighted(..., membership_form=...)`. **Every default experiment now uses
+the ratio form**, so the sensitivity analyses and the headline comparison share
+one numerical implementation and all tables agree at the shared default point.
+The negative-power form is retained behind `--legacy-membership` on `exp01`,
+`exp02`, `exp03` and `exp04`, and behind `--legacy-variant` on `exp05`, solely
+to regenerate the original notebook's tables. Those historical files — both
+the CSVs and the figures — are written with a `_legacy` suffix and are never
+mixed with the default results. (An earlier release wrote both configurations
+to the same figure filenames, so the legacy run silently overwrote the default
+plots; the suffix prevents that.)
+
+Verification, both runnable:
+
+| command | checks | result |
+|---|---|---|
+| `python verify_published_sweeps.py` | default configuration agrees across `exp04` and `exp05`, and `exp02` against the notebook | **39 / 39** |
+| `python verify_published_sweeps.py --legacy` | the negative-power reproduction path against the notebook | **165 / 165** |
 
 **This was a real defect in the first release of this package**, where the
 ratio form was used everywhere and the mapping and `k` sweeps therefore did
@@ -390,12 +403,15 @@ diverged from the notebook after an unrelated change, which prompted a
 value-by-value comparison.
 
 **What this means for the paper.** Two of the three mapping sweeps and the `k`
-sweep were produced with a numerically fragile implementation whose additive
-guard silently deactivates a subset of the samples. This is worth stating in
-the supplement, and worth re-running with the ratio form if the sweeps are
-presented as evidence about the method as configured elsewhere. The
-qualitative shape of the curves is likely to survive; the specific values at
-large `alpha` and large `gamma` will not.
+sweep in the original notebook were produced with a numerically fragile
+implementation whose additive guard silently deactivates a subset of the
+samples. The default results in this package are now computed with the ratio
+form, so they differ from the notebook at 13 of the 90 mapping-grid points and
+6 of the 54 k-grid points — all of them on Breast, concentrated at large
+`alpha` and large `gamma`. In particular, the Breast exponential `k` curve is
+flat at 0.7371 under the ratio form; the variation in the original curve was
+an artefact of the guard, not a property of the method. The sensitivity tables
+in the manuscript must therefore be regenerated from the default outputs.
 
 **Related observation.** The negative-power form also converges more slowly in
 some configurations, plausibly because the same guard suppresses part of the
@@ -422,4 +438,4 @@ The ratio form does not show this.
 | 11 | degenerate normalisation constant | unified | no |
 | 12 | AWDFCM re-initialisation source | preserved, both available | no |
 | 13 | scalability timings measure thread start-up | preserved, `--n-jobs 1` available | no (but the figure misleads) |
-| 14 | two membership forms either side of a 1e-12 guard | preserved, both available | no (reproduces them) |
+| 14 | two membership forms either side of a 1e-12 guard | resolved: default is the ratio form everywhere, legacy behind a flag | yes, the sweeps must be regenerated |

@@ -84,7 +84,8 @@ against the saved notebook output.
 | Experiment | What was compared | Result |
 |---|---|---|
 | `smoke_test.py` | ARI of six methods on all five benchmarks, frozen input | **30 / 30 values match to four decimals** |
-| `verify_published_sweeps.py` | `exp01` (90), `exp02` (21) and `exp04` (54) against the notebook's saved output | **165 / 165 values match** |
+| `verify_published_sweeps.py` | default configuration: `exp04` vs `exp05` at the shared default point, plus `exp02` against the notebook | **39 / 39 values match** |
+| `verify_published_sweeps.py --legacy` | `exp01` (90), `exp02` (21) and `exp04` (54) against the notebook's saved output, using the negative-power form | **165 / 165 values match** |
 | `exp06` | ARI, DBI, noise membership and noise AUC, mean and std, for thirteen methods on five benchmarks | **260 / 260 values match to four decimals** |
 | `exp11` | ARI, DBI and noise membership, mean and std, for five methods on five benchmarks | **75 / 75 values match to four decimals**, including the non-zero spreads |
 
@@ -117,11 +118,14 @@ configuration also reproduce, as the `exp06` row shows.
 
 | Experiment | Why | Action |
 |---|---|---|
-| `exp05` | the original sweep used a density estimator that does not match the manuscript, `KNOWN_VARIATIONS.md` §1 | regenerate with the default (paper) configuration and quote those numbers; the legacy table is available behind `--legacy-variant` |
-| `exp09` | contamination drawn without an explicit seed originally, §5 | regenerate and quote the new numbers |
+| `exp01`, `exp04` | the original sweep used the negative-power membership form, `KNOWN_VARIATIONS.md` §14; the default now uses the ratio form | quote the default outputs; 13 of 90 and 6 of 54 grid points change, all on Breast |
+| `exp05` | the original sweep used a density estimator that does not match the manuscript, `KNOWN_VARIATIONS.md` §1 | quote the default (paper) output; the legacy table is behind `--legacy-variant` |
+| `exp09` | contamination drawn without an explicit seed originally, §5 | quote the regenerated numbers |
 | `exp10` | same, plus timings are machine specific | quote relative magnitudes only |
 
-Everything else reproduces the published values.
+Everything else reproduces the published values. The historical tables for
+`exp01`, `exp02`, `exp04` and `exp05` remain reproducible with
+`--legacy-membership` / `--legacy-variant`.
 
 ### `exp05` default point after the density alignment
 
