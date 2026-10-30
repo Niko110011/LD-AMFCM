@@ -158,10 +158,12 @@ with them, and every table they generate is labelled accordingly.
    `--legacy-membership` (and `exp05 --legacy-variant`) for reproducing the
    original curves. See `docs/KNOWN_VARIATIONS.md` §14.
 
-The number of k-means++ restarts also differs by family — 1 restart for the
-sweeps, 10 for the comparison and ablation — and is registered per experiment
-in `config.py`. See the solver-settings table in
-`docs/PARAMETER_REGISTER.md`.
+The number of k-means++ restarts is ten in every result experiment except the
+scalability study, which keeps one because its timing columns measure the
+solver itself. The `--legacy-membership` paths pin the count to one to match
+the original notebook. Measured across the full sweep grids, one and ten
+restarts give bit-identical results. See the solver-settings table in
+`docs/PARAMETER_REGISTER.md` and `docs/KNOWN_VARIATIONS.md` §9.
 
 Details and the full list of deviations: [`docs/KNOWN_VARIATIONS.md`](docs/KNOWN_VARIATIONS.md).
 

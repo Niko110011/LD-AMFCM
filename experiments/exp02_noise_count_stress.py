@@ -77,6 +77,8 @@ def run(quick=False, legacy_membership=False):
 
     membership_form = (fcm.MEMBERSHIP_NEGATIVE_POWER if legacy_membership
                        else fcm.MEMBERSHIP_RATIO)
+    n_init = (config.LEGACY_N_INIT if legacy_membership
+              else config.n_init_for("exp02_noise_count_stress"))
 
     io_utils.write_environment_report(experiment, extra={
         "protocol": "regenerated input",
@@ -86,7 +88,8 @@ def run(quick=False, legacy_membership=False):
         "noise_counts": config.NOISE_COUNT_GRID,
         "adaptive_mapping": MAPPING,
         "membership_form": membership_form,
-    })
+        "n_init": n_init,
+    }, suffix="_legacy" if legacy_membership else "")
     plt = io_utils.configure_matplotlib()
 
     noise_levels = config.NOISE_COUNT_GRID[:3] if quick else config.NOISE_COUNT_GRID
@@ -123,8 +126,7 @@ def run(quick=False, legacy_membership=False):
                 m_i, w_i = fuzzifiers[method]
                 U = fcm.fcm_weighted(X, n_clusters, m_i, w_i,
                                      random_state=init_seed,
-                                     n_init=config.n_init_for(
-                                         "exp02_noise_count_stress"),
+                                     n_init=n_init,
                                      membership_form=membership_form)
                 ari = metrics.clean_ari(y_true, U.argmax(axis=1))
 

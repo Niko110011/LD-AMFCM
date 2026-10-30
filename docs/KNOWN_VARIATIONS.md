@@ -219,19 +219,36 @@ this is noted rather than repaired.
 
 ---
 
-## 9. Noted: `n_init` differs between experiment families
+## 9. Resolved: `n_init` unified to ten, except the timing study
 
-| `n_init` | Where |
-|---|---|
-| 1 | headline runs, mapping sweeps, `k` sweeps, fuzzifier sweeps, scalability |
-| 10 | baseline comparison, ablation, stress tests |
+The original notebook used ten k-means++ restarts in the comparison, ablation,
+density-reliability, noise-ratio, runtime and paired-statistics experiments,
+but one restart in the mapping, `k`, noise-count and scalability experiments.
+The split had no methodological justification — it was an artefact of how the
+code evolved — and made the same estimator look differently configured across
+tables.
 
-A single k-means++ restart is more sensitive to the initialisation seed, which
-is why several tables show zero dispersion across the ten repetitions where
-others show variation.
+**What was done.** Every result experiment now uses ten restarts, matching the
+headline comparison. The scalability study keeps one restart because its
+timing columns measure the cost of the solver itself and a ten-fold
+initialisation budget would distort them. The `--legacy-membership`
+reproduction paths pin the count to one, matching the notebook's protocol.
 
-**What was done.** Preserved per experiment and recorded in the register. Do
-not compare dispersion between an `n_init=1` table and an `n_init=10` table.
+**Evidence that this changes nothing.** One and ten restarts were compared
+across the complete grids, under both membership forms:
+
+| Path | Comparisons | Differences |
+|---|---|---|
+| `exp01` default (ratio) | 90 grid points | 0 |
+| `exp02` default (ratio) | 210 per-run values | 0 |
+| `exp04` default (ratio) | 54 grid points | 0 |
+| `exp05` default (ratio) | 108 grid points | 0 |
+| `exp01` legacy (negative-power) | 90 grid points | 0 |
+| `exp02` legacy (negative-power) | 210 per-run values | 0 |
+| `exp04` legacy (negative-power) | 54 grid points | 0 |
+
+All 816 comparisons are bit-identical. The unification removes a
+configuration difference without changing any reported number.
 
 ---
 
@@ -433,7 +450,7 @@ The ratio form does not show this.
 | 6 | convergence test compared a quantity with itself | **repaired** | only `exp05 --legacy-variant` |
 | 7 | membership update divided a row by itself | repaired (vectorisation) | no |
 | 8 | three stopping rules | noted | no |
-| 9 | `n_init` differs between families | noted | no |
+| 9 | `n_init` differs between families | resolved: 10 everywhere except the scalability timing study | no (816 comparisons identical) |
 | 10 | degenerate DBI value | noted, both paths available | no |
 | 11 | degenerate normalisation constant | unified | no |
 | 12 | AWDFCM re-initialisation source | preserved, both available | no |

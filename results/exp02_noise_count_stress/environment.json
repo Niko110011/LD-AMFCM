@@ -4,7 +4,8 @@
     "adaptive_mapping": "Sig",
     "data_seed": "100 + s",
     "init_seed": "s",
-    "membership_form": "negative_power",
+    "membership_form": "ratio",
+    "n_init": 10,
     "n_runs": 10,
     "noise_counts": [
       40,
@@ -32,5 +33,5 @@
   "python_version": "3.7.0",
   "release": "10",
   "system": "Windows",
-  "timestamp": "2026-10-21 15:40:46"
+  "timestamp": "2026-10-30 14:37:52"
 }

@@ -14,6 +14,7 @@
       4
     ],
     "membership_form": "ratio",
+    "n_init": 1,
     "n_values": [
       500,
       1000,
@@ -47,5 +48,5 @@
   "python_version": "3.7.0",
   "release": "10",
   "system": "Windows",
-  "timestamp": "2026-10-21 15:39:35"
+  "timestamp": "2026-10-30 14:33:27"
 }

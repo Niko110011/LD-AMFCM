@@ -218,11 +218,12 @@ def run(quick=False, n_jobs=DENSITY_N_JOBS, legacy_membership=False):
         "density_algorithm": DENSITY_ALGORITHM,
         "density_n_jobs": n_jobs,
         "membership_form": membership_form,
+        "n_init": config.n_init_for("exp03_scalability"),
         "timing": "time.perf_counter, wall-clock seconds",
         "caveat": ("n_jobs=-1 measures worker-pool start-up in this "
                    "environment; use --n-jobs 1 for algorithmic timings"
                    if n_jobs == -1 else "sequential kNN search"),
-    })
+    }, suffix=suffix)
 
     n_values = config.N_VALUES[:2] if quick else config.N_VALUES
     p_values = config.P_VALUES[:2] if quick else config.P_VALUES

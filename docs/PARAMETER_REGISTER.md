@@ -70,12 +70,12 @@ Two settings are not global. Both are registered per experiment in
 
 | Experiment | k-means++ restarts | Membership update |
 |---|---|---|
-| `exp01` mapping sensitivity | 1 | ratio |
-| `exp02` noise-count stress | 1 | ratio |
-| `exp03` scalability | 1 | ratio |
-| `exp04` neighbourhood size k | 1 | ratio |
-| `exp05` fuzzifier bounds | 1 | ratio |
-| `exp01`–`exp04` with `--legacy-membership` | 1 (not used for `exp05`) | negative-power |
+| `exp01` mapping sensitivity | **10** | ratio |
+| `exp02` noise-count stress | **10** | ratio |
+| `exp03` scalability | 1 (timing study) | ratio |
+| `exp04` neighbourhood size k | **10** | ratio |
+| `exp05` fuzzifier bounds | **10** | ratio |
+| `exp01`–`exp04` with `--legacy-membership` | 1 | negative-power |
 | `exp05` with `--legacy-variant` | not used | negative-power |
 | `exp06` baseline comparison | 10 | ratio |
 | `exp07` density-reliability stress | 10 | ratio |
@@ -84,11 +84,16 @@ Two settings are not global. Both are registered per experiment in
 | `exp10` runtime | 10 | ratio |
 | `exp11` paired statistics | 10 | ratio |
 
-Only the membership column moves the published sweep values. Measured on the
-mapping sweep, one and ten restarts give identical ARI at every grid point
-tested, so the restarts column restores the recorded protocol rather than
-changing any number. The GMM, k-means and adaptive-FCM-GE baselines use ten
-restarts in every experiment.
+The restart count is ten everywhere except the scalability study, whose
+timing columns measure the solver itself; a ten-fold initialisation budget
+would distort them. Measured across the complete `exp01`, `exp02`, `exp04`
+and `exp05` grids (816 grid-point and per-run comparisons, both membership
+forms), one and ten restarts give bit-identical ARI, so the unification
+changes no reported number. The `--legacy-membership` paths pin the count to
+one to match the original notebook's protocol.
+
+Only the membership form moves the published sweep values. The GMM, k-means
+and adaptive-FCM-GE baselines use ten restarts in every experiment.
 
 **Membership update forms.** Both are algebraically equivalent, but they
 differ wherever the fuzzifier is small, because the negative-power form's

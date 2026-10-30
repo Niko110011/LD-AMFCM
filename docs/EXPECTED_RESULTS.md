@@ -89,10 +89,16 @@ against the saved notebook output.
 | `exp06` | ARI, DBI, noise membership and noise AUC, mean and std, for thirteen methods on five benchmarks | **260 / 260 values match to four decimals** |
 | `exp11` | ARI, DBI and noise membership, mean and std, for five methods on five benchmarks | **75 / 75 values match to four decimals**, including the non-zero spreads |
 
-The sweep family (`exp01`, `exp02`, `exp04`) only reproduces with the
-negative-power membership form and a single k-means++ restart. The comparison
-family (`exp06`, `exp11`) only reproduces with the ratio form and ten
-restarts. Both are registered per experiment; see `KNOWN_VARIATIONS.md` §14.
+The sweep family (`exp01`, `exp02`, `exp04`) reproduces the original curves
+with the negative-power membership form (available behind
+`--legacy-membership`). The default results use the ratio form, matching the
+headline comparison; see `KNOWN_VARIATIONS.md` §14.
+
+`n_init` is ten in every result experiment except the scalability timing
+study. Before the unification, one and ten restarts were compared across the
+complete `exp01`, `exp02`, `exp04` and `exp05` grids, under both membership
+forms: **816 comparisons, all bit-identical**. The change therefore alters no
+value in any table.
 
 `exp11` also confirms the global-generator faithful mode: the standard
 deviations only match if each run consumes the random stream in the same

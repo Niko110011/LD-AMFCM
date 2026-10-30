@@ -87,11 +87,15 @@ def run(quick=False, legacy_variant=False):
             "sigma_i = mean kNN distance of point i"),
         "initialisation": ("k-means++" if not legacy_variant
                            else "random membership, RandomState(42)"),
+        "n_init": (config.n_init_for("exp05_fuzzifier_sensitivity")
+                   if not legacy_variant else "not used"),
+        "membership_form": ("negative_power (legacy random-membership solver)"
+                            if legacy_variant else "ratio"),
         "stopping_rule": ("|V_new - V| < 1e-4" if not legacy_variant
                           else "|U_new - U| < 1e-5"),
         "m_min_grid": config.M_MIN_GRID,
         "m_max_grid": config.M_MAX_GRID,
-    })
+    }, suffix="_legacy_variant" if legacy_variant else "")
     plt = io_utils.configure_matplotlib()
 
     records = []

@@ -98,13 +98,18 @@ def environment_report():
     return report
 
 
-def write_environment_report(experiment, extra=None):
-    """Write ``environment.json`` for an experiment and print a short summary."""
+def write_environment_report(experiment, extra=None, suffix=""):
+    """Write ``environment[suffix].json`` for an experiment.
+
+    ``suffix`` keeps the default and legacy configurations from overwriting
+    each other's environment record, in the same way the CSV and figure
+    filenames are suffixed.
+    """
     report = environment_report()
     if extra:
         report["experiment"] = extra
 
-    path = result_dir(experiment) / "environment.json"
+    path = result_dir(experiment) / "environment{}.json".format(suffix)
     with open(str(path), "w") as handle:
         json.dump(report, handle, indent=2, sort_keys=True)
 

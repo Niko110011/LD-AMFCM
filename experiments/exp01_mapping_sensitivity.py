@@ -62,13 +62,16 @@ def run(quick=False, legacy_membership=False):
 
     membership_form = (fcm.MEMBERSHIP_NEGATIVE_POWER if legacy_membership
                        else fcm.MEMBERSHIP_RATIO)
+    n_init = (config.LEGACY_N_INIT if legacy_membership
+              else config.n_init_for("exp01_mapping_sensitivity"))
 
     io_utils.write_environment_report(experiment, extra={
         "protocol": "frozen input; per-benchmark data seed 42",
         "varied": "alpha, beta, gamma (one at a time)",
         "constant": CONSTANTS,
         "membership_form": membership_form,
-    })
+        "n_init": n_init,
+    }, suffix="_legacy" if legacy_membership else "")
     plt = io_utils.configure_matplotlib()
 
     records = []
@@ -109,7 +112,7 @@ def run(quick=False, legacy_membership=False):
                     U = fcm.fcm_weighted(
                         X, n_clusters, m_i, w,
                         random_state=init_seed,
-                        n_init=config.n_init_for("exp01_mapping_sensitivity"),
+                        n_init=n_init,
                         membership_form=membership_form,
                     )
                     aris.append(metrics.clean_ari(y_true, U.argmax(axis=1)))

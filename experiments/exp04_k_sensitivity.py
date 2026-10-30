@@ -45,14 +45,16 @@ def run(quick=False, legacy_membership=False):
 
     membership_form = (fcm.MEMBERSHIP_NEGATIVE_POWER if legacy_membership
                        else fcm.MEMBERSHIP_RATIO)
+    n_init = (config.LEGACY_N_INIT if legacy_membership
+              else config.n_init_for("exp04_k_sensitivity"))
 
     io_utils.write_environment_report(experiment, extra={
         "protocol": "frozen input; per-benchmark data seed 42; single run",
         "init_seed": config.SEED_SINGLE_RUN,
         "k_values": config.K_GRID,
-        "kmeans_n_init": 1,
+        "n_init": n_init,
         "membership_form": membership_form,
-    })
+    }, suffix="_legacy" if legacy_membership else "")
     plt = io_utils.configure_matplotlib()
 
     k_values = config.K_GRID[:3] if quick else config.K_GRID
@@ -77,7 +79,7 @@ def run(quick=False, legacy_membership=False):
                 U = fcm.fcm_weighted(
                     X, n_clusters, m_i, w,
                     random_state=config.SEED_SINGLE_RUN,
-                    n_init=config.n_init_for("exp04_k_sensitivity"),
+                    n_init=n_init,
                     membership_form=membership_form,
                 )
                 records.append({

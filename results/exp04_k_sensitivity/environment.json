@@ -10,8 +10,8 @@
       20,
       30
     ],
-    "kmeans_n_init": 1,
-    "membership_form": "negative_power",
+    "membership_form": "ratio",
+    "n_init": 10,
     "protocol": "frozen input; per-benchmark data seed 42; single run"
   },
   "machine": "AMD64",
@@ -29,5 +29,5 @@
   "python_version": "3.7.0",
   "release": "10",
   "system": "Windows",
-  "timestamp": "2026-10-21 15:41:08"
+  "timestamp": "2026-10-30 14:38:08"
 }

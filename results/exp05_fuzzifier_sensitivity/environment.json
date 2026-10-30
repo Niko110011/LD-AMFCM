@@ -21,6 +21,8 @@
       1.3,
       1.5
     ],
+    "membership_form": "ratio",
+    "n_init": 10,
     "protocol": "frozen input; per-benchmark data seed 42; single run",
     "stopping_rule": "|V_new - V| < 1e-4"
   },
@@ -39,5 +41,5 @@
   "python_version": "3.7.0",
   "release": "10",
   "system": "Windows",
-  "timestamp": "2026-10-21 14:04:42"
+  "timestamp": "2026-10-30 14:40:41"
 }
