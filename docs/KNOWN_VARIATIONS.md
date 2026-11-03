@@ -304,8 +304,8 @@ whose start-up cost swamps the computation:
 
 | n | `n_jobs=-1` | `n_jobs=1` | ratio |
 |---|---|---|---|
-| 500 | 3.95 s | 0.005 s | ~760× |
-| 10 000 | 5.54 s | 1.72 s | ~3× |
+| 500 | 3.95 s | 0.008 s | ~480× |
+| 10 000 | 5.54 s | 2.29 s | ~2.4× |
 
 The consequence for the reported figure is not cosmetic. Density estimation
 appears to dominate the runtime at every sample size — 2.2 s out of 2.2 s
@@ -319,23 +319,23 @@ algorithm, and the caveat is written into the experiment's
 `environment.json`. `results/exp03_scalability/` holds the sequential run.
 
 **What the corrected numbers show.** With a sequential kNN search the density
-step costs 0.005 s at n = 500 and 1.67 s at n = 10 000, against 0.072 s total
+step costs 0.008 s at n = 500 and 2.29 s at n = 10 000, against 0.117 s total
 for plain FCM at the largest size:
 
 | n | density | LD-AMFCM total (Exp) | FCM total | density share |
 |---|---|---|---|---|
-| 500 | 0.005 s | 0.013 s | 0.008 s | 41 % |
-| 1 000 | 0.020 s | 0.031 s | 0.014 s | 65 % |
-| 2 000 | 0.077 s | 0.090 s | 0.019 s | 86 % |
-| 5 000 | 0.502 s | 0.525 s | 0.040 s | 96 % |
-| 10 000 | 1.670 s | 1.714 s | 0.072 s | 97 % |
+| 500 | 0.008 s | 0.021 s | 0.012 s | 40 % |
+| 1 000 | 0.033 s | 0.051 s | 0.023 s | 65 % |
+| 2 000 | 0.127 s | 0.153 s | 0.032 s | 84 % |
+| 5 000 | 0.760 s | 0.804 s | 0.075 s | 95 % |
+| 10 000 | 2.289 s | 2.367 s | 0.117 s | 97 % |
 
 So the qualitative conclusion survives: the density step genuinely dominates
 at large n and grows super-linearly, because the exact brute-force kNN search
 is quadratic in n. What does **not** survive is the small-n end of the
 published figure, where the density step appeared to dominate when it in fact
-cost five milliseconds. The crossover to genuine dominance is around n ≈ 500,
-not at n = 500 already being 99.5 %.
+cost eight milliseconds. The crossover to genuine majority is around
+n ≈ 1 000, not at n = 500 already being 99.5 %.
 
 **What this means for the paper.** Regenerate the figure with
 `python experiments/exp03_scalability.py --n-jobs 1` before the timing claim

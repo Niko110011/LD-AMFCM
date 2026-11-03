@@ -180,11 +180,15 @@ instead and is discussed in `KNOWN_VARIATIONS.md` §13:
 
 | n | density (s) | LD-AMFCM total (s) | FCM total (s) | Iterations (Exp / Rec) |
 |---|---|---|---|---|
-| 500 | 0.005 | 0.013 | 0.008 | 10.8 / 72 |
-| 1 000 | 0.020 | 0.031 | 0.014 | 8.0 / 58 |
-| 2 000 | 0.077 | 0.090 | 0.019 | 7.0 / 62 |
-| 5 000 | 0.502 | 0.525 | 0.040 | 6.0 / 55 |
-| 10 000 | 1.670 | 1.714 | 0.072 | 5.0 / 61 |
+| 500 | 0.008 | 0.021 | 0.012 | 10.8 / 72 |
+| 1 000 | 0.033 | 0.051 | 0.023 | 8.0 / 58 |
+| 2 000 | 0.127 | 0.153 | 0.032 | 7.0 / 62 |
+| 5 000 | 0.760 | 0.804 | 0.075 | 6.0 / 55 |
+| 10 000 | 2.289 | 2.367 | 0.117 | 5.0 / 61 |
+
+These are from the isolated run that produced the current
+`results/exp03_scalability/` files. Timings depend on machine load; the
+iteration counts do not.
 
 The reciprocal mapping needs roughly ten times as many iterations as the
 exponential and sigmoid mappings at every sample size. This is a property of
